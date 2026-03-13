@@ -1,0 +1,14 @@
+# Common
+.DS_Store
+*.log
+
+# Python
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.venv/
+
+# Node
+node_modules/
+.next/
+dist/
