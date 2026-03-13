@@ -1,0 +1,1183 @@
+{
+  "components": {
+    "schemas": {
+      "CommandResponse": {
+        "properties": {
+          "command_class": {
+            "title": "Command Class",
+            "type": "string"
+          },
+          "command_id": {
+            "title": "Command Id",
+            "type": "string"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "correlation_id": {
+            "title": "Correlation Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dispatched_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dispatched At"
+          },
+          "effective_channel": {
+            "title": "Effective Channel",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "organization_id": {
+            "title": "Organization Id",
+            "type": "string"
+          },
+          "override_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Override Reason"
+          },
+          "parent_command_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Command Id"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          },
+          "point_id": {
+            "title": "Point Id",
+            "type": "string"
+          },
+          "queue_priority": {
+            "title": "Queue Priority",
+            "type": "integer"
+          },
+          "queue_seq": {
+            "title": "Queue Seq",
+            "type": "integer"
+          },
+          "reconciliation_deadline_at": {
+            "format": "date-time",
+            "title": "Reconciliation Deadline At",
+            "type": "string"
+          },
+          "requested_channel": {
+            "title": "Requested Channel",
+            "type": "string"
+          },
+          "result_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Reason"
+          },
+          "site_id": {
+            "title": "Site Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "command_id",
+          "organization_id",
+          "site_id",
+          "point_id",
+          "command_class",
+          "status",
+          "requested_channel",
+          "effective_channel",
+          "idempotency_key",
+          "correlation_id",
+          "payload",
+          "parent_command_id",
+          "queue_priority",
+          "queue_seq",
+          "override_reason",
+          "reconciliation_deadline_at",
+          "dispatched_at",
+          "completed_at",
+          "result_reason",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CommandResponse",
+        "type": "object"
+      },
+      "CommandSubmitRequest": {
+        "properties": {
+          "command_class": {
+            "enum": [
+              "safety_critical",
+              "interactive_control",
+              "routine_automation",
+              "bulk_non_critical"
+            ],
+            "title": "Command Class",
+            "type": "string"
+          },
+          "correlation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correlation Id"
+          },
+          "idempotency_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Idempotency Key"
+          },
+          "organization_id": {
+            "minLength": 1,
+            "title": "Organization Id",
+            "type": "string"
+          },
+          "parent_command_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Command Id"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          },
+          "point_id": {
+            "minLength": 1,
+            "title": "Point Id",
+            "type": "string"
+          },
+          "site_id": {
+            "minLength": 1,
+            "title": "Site Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "organization_id",
+          "site_id",
+          "point_id",
+          "command_class",
+          "payload"
+        ],
+        "title": "CommandSubmitRequest",
+        "type": "object"
+      },
+      "CommandSubmitResponse": {
+        "properties": {
+          "command": {
+            "$ref": "#/components/schemas/CommandResponse"
+          },
+          "duplicate_of": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duplicate Of"
+          },
+          "generated_correlation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated Correlation Id"
+          },
+          "generated_idempotency_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated Idempotency Key"
+          }
+        },
+        "required": [
+          "duplicate_of",
+          "generated_idempotency_key",
+          "generated_correlation_id",
+          "command"
+        ],
+        "title": "CommandSubmitResponse",
+        "type": "object"
+      },
+      "DispatchRequest": {
+        "properties": {
+          "point_id": {
+            "minLength": 1,
+            "title": "Point Id",
+            "type": "string"
+          },
+          "site_id": {
+            "minLength": 1,
+            "title": "Site Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "site_id",
+          "point_id"
+        ],
+        "title": "DispatchRequest",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "IncidentDeliveryRequest": {
+        "properties": {
+          "limit": {
+            "default": 100,
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "title": "IncidentDeliveryRequest",
+        "type": "object"
+      },
+      "IncidentDeliveryResponse": {
+        "properties": {
+          "delivered_count": {
+            "title": "Delivered Count",
+            "type": "integer"
+          },
+          "failed_count": {
+            "title": "Failed Count",
+            "type": "integer"
+          },
+          "lock_acquired": {
+            "title": "Lock Acquired",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "lock_acquired",
+          "delivered_count",
+          "failed_count"
+        ],
+        "title": "IncidentDeliveryResponse",
+        "type": "object"
+      },
+      "IncidentHookResponse": {
+        "properties": {
+          "attempt_count": {
+            "title": "Attempt Count",
+            "type": "integer"
+          },
+          "command_id": {
+            "title": "Command Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "delivered_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivered At"
+          },
+          "event_id": {
+            "title": "Event Id",
+            "type": "string"
+          },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "manual_action_required": {
+            "title": "Manual Action Required",
+            "type": "boolean"
+          },
+          "next_attempt_at": {
+            "format": "date-time",
+            "title": "Next Attempt At",
+            "type": "string"
+          },
+          "organization_id": {
+            "title": "Organization Id",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "severity": {
+            "title": "Severity",
+            "type": "string"
+          },
+          "site_id": {
+            "title": "Site Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "event_id",
+          "command_id",
+          "organization_id",
+          "site_id",
+          "severity",
+          "reason",
+          "manual_action_required",
+          "payload",
+          "attempt_count",
+          "next_attempt_at",
+          "delivered_at",
+          "last_error",
+          "created_at"
+        ],
+        "title": "IncidentHookResponse",
+        "type": "object"
+      },
+      "OverrideRequest": {
+        "properties": {
+          "actor_role": {
+            "minLength": 1,
+            "title": "Actor Role",
+            "type": "string"
+          },
+          "channel": {
+            "enum": [
+              "API",
+              "MQTT"
+            ],
+            "title": "Channel",
+            "type": "string"
+          },
+          "reason": {
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "actor_role",
+          "reason",
+          "channel"
+        ],
+        "title": "OverrideRequest",
+        "type": "object"
+      },
+      "PolicyResponse": {
+        "properties": {
+          "api_attempts_before_fallback": {
+            "title": "Api Attempts Before Fallback",
+            "type": "integer"
+          },
+          "api_timeout_seconds": {
+            "title": "Api Timeout Seconds",
+            "type": "integer"
+          },
+          "command_class": {
+            "title": "Command Class",
+            "type": "string"
+          },
+          "mqtt_fallback_allowed": {
+            "title": "Mqtt Fallback Allowed",
+            "type": "boolean"
+          },
+          "mqtt_retry_budget": {
+            "title": "Mqtt Retry Budget",
+            "type": "integer"
+          },
+          "primary_channel": {
+            "title": "Primary Channel",
+            "type": "string"
+          },
+          "reconciliation_sla_seconds": {
+            "title": "Reconciliation Sla Seconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "command_class",
+          "primary_channel",
+          "api_timeout_seconds",
+          "api_attempts_before_fallback",
+          "mqtt_retry_budget",
+          "mqtt_fallback_allowed",
+          "reconciliation_sla_seconds"
+        ],
+        "title": "PolicyResponse",
+        "type": "object"
+      },
+      "QueueResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CommandResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "QueueResponse",
+        "type": "object"
+      },
+      "ReconcileRequest": {
+        "properties": {
+          "observed_match": {
+            "title": "Observed Match",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "observed_match"
+        ],
+        "title": "ReconcileRequest",
+        "type": "object"
+      },
+      "SlaBatchEvaluateRequest": {
+        "properties": {
+          "limit": {
+            "default": 100,
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "title": "SlaBatchEvaluateRequest",
+        "type": "object"
+      },
+      "SlaBatchEvaluateResponse": {
+        "properties": {
+          "breached_count": {
+            "title": "Breached Count",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SlaCheckResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "lock_acquired": {
+            "title": "Lock Acquired",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "lock_acquired",
+          "breached_count",
+          "items"
+        ],
+        "title": "SlaBatchEvaluateResponse",
+        "type": "object"
+      },
+      "SlaCheckResponse": {
+        "properties": {
+          "alert_required": {
+            "title": "Alert Required",
+            "type": "boolean"
+          },
+          "breached": {
+            "title": "Breached",
+            "type": "boolean"
+          },
+          "command": {
+            "$ref": "#/components/schemas/CommandResponse"
+          },
+          "manual_action_required": {
+            "title": "Manual Action Required",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "breached",
+          "alert_required",
+          "manual_action_required",
+          "command"
+        ],
+        "title": "SlaCheckResponse",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Wave 4 baseline for command channel policy, queueing, and safety constraints.",
+    "title": "Channel Policy Router",
+    "version": "1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/commands": {
+      "post": {
+        "operationId": "submit_command_api_v1_commands_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommandSubmitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandSubmitResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Command"
+      }
+    },
+    "/api/v1/commands/{command_id}": {
+      "get": {
+        "operationId": "get_command_api_v1_commands__command_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "command_id",
+            "required": true,
+            "schema": {
+              "title": "Command Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Command"
+      }
+    },
+    "/api/v1/commands/{command_id}/cancel": {
+      "post": {
+        "operationId": "cancel_command_api_v1_commands__command_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "command_id",
+            "required": true,
+            "schema": {
+              "title": "Command Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel Command"
+      }
+    },
+    "/api/v1/commands/{command_id}/check-sla": {
+      "post": {
+        "operationId": "check_sla_api_v1_commands__command_id__check_sla_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "command_id",
+            "required": true,
+            "schema": {
+              "title": "Command Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlaCheckResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Check Sla"
+      }
+    },
+    "/api/v1/commands/{command_id}/override-channel": {
+      "post": {
+        "operationId": "override_channel_api_v1_commands__command_id__override_channel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "command_id",
+            "required": true,
+            "schema": {
+              "title": "Command Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OverrideRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Override Channel"
+      }
+    },
+    "/api/v1/commands/{command_id}/reconcile": {
+      "post": {
+        "operationId": "reconcile_command_api_v1_commands__command_id__reconcile_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "command_id",
+            "required": true,
+            "schema": {
+              "title": "Command Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReconcileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reconcile Command"
+      }
+    },
+    "/api/v1/dispatch-next": {
+      "post": {
+        "operationId": "dispatch_next_api_v1_dispatch_next_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DispatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Dispatch Next"
+      }
+    },
+    "/api/v1/incidents/hooks": {
+      "get": {
+        "operationId": "list_incident_hooks_api_v1_incidents_hooks_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/IncidentHookResponse"
+                  },
+                  "title": "Response List Incident Hooks Api V1 Incidents Hooks Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Incident Hooks"
+      }
+    },
+    "/api/v1/incidents/hooks/deliver": {
+      "post": {
+        "operationId": "deliver_incident_hooks_api_v1_incidents_hooks_deliver_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IncidentDeliveryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncidentDeliveryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Deliver Incident Hooks"
+      }
+    },
+    "/api/v1/policy/{command_class}": {
+      "get": {
+        "operationId": "get_policy_api_v1_policy__command_class__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "command_class",
+            "required": true,
+            "schema": {
+              "title": "Command Class",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Policy"
+      }
+    },
+    "/api/v1/queue": {
+      "get": {
+        "operationId": "list_queue_api_v1_queue_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "site_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "title": "Site Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "point_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "title": "Point Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Queue"
+      }
+    },
+    "/api/v1/sla/evaluate": {
+      "post": {
+        "operationId": "evaluate_sla_batch_api_v1_sla_evaluate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SlaBatchEvaluateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlaBatchEvaluateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Evaluate Sla Batch"
+      }
+    },
+    "/healthz": {
+      "get": {
+        "operationId": "health_healthz_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Health Healthz Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health"
+      }
+    }
+  }
+}
