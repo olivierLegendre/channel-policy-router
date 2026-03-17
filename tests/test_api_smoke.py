@@ -1,10 +1,21 @@
-import base64
-import json
+from __future__ import annotations
+
 from datetime import UTC, datetime, timedelta
 
+import jwt
 from fastapi.testclient import TestClient
 
 from channel_policy_router.main import create_app
+
+TEST_SECRET = "dev-wave6-change-me-32-byte-minimum-key"
+
+
+def _jwt_for_roles(*roles: str) -> str:
+    payload = {
+        "realm_access": {"roles": list(roles)},
+        "exp": datetime.now(tz=UTC) + timedelta(minutes=15),
+    }
+    return str(jwt.encode(payload, TEST_SECRET, algorithm="HS256"))
 
 
 def test_healthz(in_memory_client: TestClient) -> None:
@@ -106,7 +117,6 @@ def test_queue_overflow_503_and_retry_after(in_memory_client: TestClient) -> Non
 
 
 def test_safety_is_prioritized_in_queue(in_memory_client: TestClient) -> None:
-    # first accepted, next queued
     for i in range(2):
         in_memory_client.post(
             "/api/v1/commands",
@@ -295,18 +305,6 @@ def test_incident_delivery_retry_and_backoff(monkeypatch) -> None:
         assert hooks.status_code == 200
         rows = hooks.json()
         assert rows[0]["attempt_count"] >= 0
-
-
-def _jwt_for_roles(*roles: str) -> str:
-    header = (
-        base64.urlsafe_b64encode(json.dumps({"alg": "none", "typ": "JWT"}).encode())
-        .decode()
-        .rstrip("=")
-    )
-    payload = base64.urlsafe_b64encode(
-        json.dumps({"realm_access": {"roles": list(roles)}}).encode()
-    ).decode().rstrip("=")
-    return f"{header}.{payload}.sig"
 
 
 def test_list_commands_and_governance_snapshot(in_memory_client: TestClient) -> None:

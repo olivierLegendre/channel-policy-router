@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     incident_delivery_backoff_base_seconds: int = Field(default=10, ge=1)
     incident_delivery_backoff_max_seconds: int = Field(default=300, ge=1)
 
+    auth_jwt_secret: str = "dev-wave6-change-me-32-byte-minimum-key"
+    auth_jwt_issuer: str | None = None
+    auth_jwt_audience: str | None = None
+
     model_config = SettingsConfigDict(
         env_prefix="CHANNEL_POLICY_ROUTER_",
         env_file=".env",
