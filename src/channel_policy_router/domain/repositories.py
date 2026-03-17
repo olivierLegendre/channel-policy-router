@@ -12,6 +12,24 @@ class CommandRepository(Protocol):
 
     def get(self, command_id: str) -> Command | None: ...
 
+    def list_recent(
+        self,
+        *,
+        site_id: str,
+        status: str | None,
+        limit: int,
+    ) -> Sequence[Command]: ...
+
+    def count_recent_by_status(
+        self,
+        *,
+        site_id: str,
+        status: str,
+        since: datetime,
+    ) -> int: ...
+
+    def count_queued(self, *, site_id: str) -> int: ...
+
     def find_recent_by_idempotency(
         self,
         *,

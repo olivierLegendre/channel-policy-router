@@ -28,6 +28,27 @@ class InMemoryCommandRepository:
     def get(self, command_id: str) -> Command | None:
         return self._store.commands.get(command_id)
 
+    def list_recent(self, *, site_id: str, status: str | None, limit: int) -> Sequence[Command]:
+        rows = [row for row in self._store.commands.values() if row.site_id == site_id]
+        if status is not None:
+            rows = [row for row in rows if row.status.value == status]
+        rows.sort(key=lambda row: row.created_at, reverse=True)
+        return rows[:limit]
+
+    def count_recent_by_status(self, *, site_id: str, status: str, since: datetime) -> int:
+        return sum(
+            1
+            for row in self._store.commands.values()
+            if row.site_id == site_id and row.status.value == status and row.created_at >= since
+        )
+
+    def count_queued(self, *, site_id: str) -> int:
+        return sum(
+            1
+            for row in self._store.commands.values()
+            if row.site_id == site_id and row.status == CommandStatus.queued
+        )
+
     def find_recent_by_idempotency(
         self,
         *,
@@ -228,7 +249,7 @@ class InMemoryUnitOfWork(UnitOfWork):
         self.locks = InMemoryBatchLockRepository(self._store)
         return self
 
-    def __exit__(self, exc_type, exc, tb) -> None:
+    def __exit__(self, exc_type: object, exc: object, tb: object) -> None:
         if exc_type:
             self.rollback()
 

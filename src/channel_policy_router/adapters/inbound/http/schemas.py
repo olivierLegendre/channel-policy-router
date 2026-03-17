@@ -51,10 +51,19 @@ class CommandSubmitResponse(BaseModel):
     command: CommandResponse
 
 
+class ListCommandsResponse(BaseModel):
+    items: list[CommandResponse]
+
+
 class OverrideRequest(BaseModel):
     actor_role: str = Field(min_length=1)
     reason: str = Field(min_length=1)
     channel: Literal["API", "MQTT"]
+
+
+class ReissueRequest(BaseModel):
+    actor_role: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
 
 
 class QueueResponse(BaseModel):
@@ -121,3 +130,10 @@ class IncidentDeliveryResponse(BaseModel):
     lock_acquired: bool
     delivered_count: int
     failed_count: int
+
+
+class GovernanceSnapshotResponse(BaseModel):
+    site_id: str
+    queueDepth: int
+    slaBreaches24h: int
+    rejected50324h: int

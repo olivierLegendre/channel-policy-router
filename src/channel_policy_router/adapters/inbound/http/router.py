@@ -1,4 +1,10 @@
-from fastapi import APIRouter, HTTPException, Query
+from __future__ import annotations
+
+import base64
+import json
+from typing import Any
+
+from fastapi import APIRouter, Header, HTTPException, Query
 
 from channel_policy_router.application.use_cases import CommandRouterUseCases
 from channel_policy_router.domain.entities import Channel, CommandClass
@@ -18,20 +24,23 @@ from .schemas import (
     CommandSubmitRequest,
     CommandSubmitResponse,
     DispatchRequest,
+    GovernanceSnapshotResponse,
     IncidentDeliveryRequest,
     IncidentDeliveryResponse,
     IncidentHookResponse,
+    ListCommandsResponse,
     OverrideRequest,
     PolicyResponse,
     QueueResponse,
     ReconcileRequest,
+    ReissueRequest,
     SlaBatchEvaluateRequest,
     SlaBatchEvaluateResponse,
     SlaCheckResponse,
 )
 
 
-def _to_command_response(item) -> CommandResponse:
+def _to_command_response(item: Any) -> CommandResponse:
     return CommandResponse(
         command_id=item.command_id,
         organization_id=item.organization_id,
@@ -55,6 +64,58 @@ def _to_command_response(item) -> CommandResponse:
         created_at=item.created_at,
         updated_at=item.updated_at,
     )
+
+
+def _decode_token_payload(authorization: str | None) -> dict[str, Any]:
+    if authorization is None or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="missing bearer token")
+    token = authorization.split(" ", maxsplit=1)[1].strip()
+    parts = token.split(".")
+    if len(parts) < 2:
+        raise HTTPException(status_code=401, detail="invalid bearer token")
+    payload_part = parts[1]
+    padding = "=" * (-len(payload_part) % 4)
+    try:
+        decoded = base64.urlsafe_b64decode(payload_part + padding)
+        payload = json.loads(decoded.decode("utf-8"))
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=401, detail="invalid bearer token") from exc
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=401, detail="invalid bearer token")
+    return payload
+
+
+def _extract_roles(payload: dict[str, Any]) -> set[str]:
+    roles: set[str] = set()
+    realm_access = payload.get("realm_access")
+    if isinstance(realm_access, dict):
+        realm_roles = realm_access.get("roles")
+        if isinstance(realm_roles, list):
+            roles.update(str(item) for item in realm_roles)
+
+    resource_access = payload.get("resource_access")
+    if isinstance(resource_access, dict):
+        for resource in resource_access.values():
+            if not isinstance(resource, dict):
+                continue
+            resource_roles = resource.get("roles")
+            if isinstance(resource_roles, list):
+                roles.update(str(item) for item in resource_roles)
+
+    root_roles = payload.get("roles")
+    if isinstance(root_roles, list):
+        roles.update(str(item) for item in root_roles)
+
+    return roles
+
+
+def _require_role(authorization: str | None, allowed: set[str]) -> str:
+    payload = _decode_token_payload(authorization)
+    roles = _extract_roles(payload)
+    intersection = roles & allowed
+    if not intersection:
+        raise HTTPException(status_code=403, detail="insufficient role for command mutation")
+    return sorted(intersection)[0]
 
 
 def create_router(use_cases: CommandRouterUseCases) -> APIRouter:
@@ -122,6 +183,15 @@ def create_router(use_cases: CommandRouterUseCases) -> APIRouter:
             command=_to_command_response(result.command),
         )
 
+    @router.get("/api/v1/commands", response_model=ListCommandsResponse)
+    def list_commands(
+        site_id: str = Query(min_length=1),
+        status: str | None = Query(default=None),
+        limit: int = Query(default=100, ge=1, le=1000),
+    ) -> ListCommandsResponse:
+        rows = use_cases.list_commands(site_id=site_id, status=status, limit=limit)
+        return ListCommandsResponse(items=[_to_command_response(row) for row in rows])
+
     @router.get("/api/v1/commands/{command_id}", response_model=CommandResponse)
     def get_command(command_id: str) -> CommandResponse:
         try:
@@ -139,6 +209,39 @@ def create_router(use_cases: CommandRouterUseCases) -> APIRouter:
         except CancelNotAllowedError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         return _to_command_response(row)
+
+    @router.post(
+        "/api/v1/commands/{command_id}/reissue",
+        response_model=CommandSubmitResponse,
+        status_code=202,
+    )
+    def reissue_command(
+        command_id: str,
+        body: ReissueRequest,
+        authorization: str | None = Header(default=None),
+    ) -> CommandSubmitResponse:
+        actor_role = _require_role(
+            authorization,
+            {"org_admin", "site_admin", "operations_override"},
+        )
+        try:
+            result = use_cases.reissue_command(
+                command_id=command_id,
+                actor_role=actor_role,
+                reason=body.reason,
+            )
+        except NotFoundError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except OverrideNotAllowedError as exc:
+            raise HTTPException(status_code=403, detail=str(exc)) from exc
+        except ValidationError as exc:
+            raise HTTPException(status_code=422, detail=exc.detail) from exc
+        return CommandSubmitResponse(
+            duplicate_of=result.duplicate_of,
+            generated_idempotency_key=result.generated_idempotency_key,
+            generated_correlation_id=result.generated_correlation_id,
+            command=_to_command_response(result.command),
+        )
 
     @router.post("/api/v1/commands/{command_id}/override-channel", response_model=CommandResponse)
     def override_channel(command_id: str, body: OverrideRequest) -> CommandResponse:
@@ -243,6 +346,16 @@ def create_router(use_cases: CommandRouterUseCases) -> APIRouter:
             )
             for row in rows
         ]
+
+    @router.get("/api/v1/governance/snapshot", response_model=GovernanceSnapshotResponse)
+    def governance_snapshot(site_id: str = Query(min_length=1)) -> GovernanceSnapshotResponse:
+        row = use_cases.get_governance_snapshot(site_id=site_id)
+        return GovernanceSnapshotResponse(
+            site_id=row.site_id,
+            queueDepth=row.queue_depth,
+            slaBreaches24h=row.sla_breaches_24h,
+            rejected50324h=row.rejected_503_24h,
+        )
 
     @router.get("/api/v1/queue", response_model=QueueResponse)
     def list_queue(

@@ -8,6 +8,7 @@ from channel_policy_router.domain.entities import (
     Command,
     CommandClass,
     CommandStatus,
+    GovernanceSnapshot,
     IncidentDeliveryBatchResult,
     IncidentHookEvent,
     SlaBatchResult,
@@ -169,6 +170,32 @@ class CommandRouterUseCases:
                 raise NotFoundError(f"command not found: {command_id}")
             return row
 
+    def list_commands(self, *, site_id: str, status: str | None, limit: int = 100) -> list[Command]:
+        with self._uow as uow:
+            rows = uow.commands.list_recent(site_id=site_id, status=status, limit=limit)
+        return list(rows)
+
+    def get_governance_snapshot(self, *, site_id: str) -> GovernanceSnapshot:
+        with self._uow as uow:
+            queue_depth = uow.commands.count_queued(site_id=site_id)
+            since = datetime.now(tz=UTC) - timedelta(hours=24)
+            breaches = uow.commands.count_recent_by_status(
+                site_id=site_id,
+                status=CommandStatus.failed.value,
+                since=since,
+            )
+            rejected = uow.commands.count_recent_by_status(
+                site_id=site_id,
+                status="rejected_queue_saturated",
+                since=since,
+            )
+        return GovernanceSnapshot(
+            site_id=site_id,
+            queue_depth=queue_depth,
+            sla_breaches_24h=breaches,
+            rejected_503_24h=rejected,
+        )
+
     def cancel_command(self, command_id: str) -> Command:
         with self._uow as uow:
             row = uow.commands.get(command_id)
@@ -187,6 +214,29 @@ class CommandRouterUseCases:
             persisted = uow.commands.update(updated)
             uow.commit()
             return persisted
+
+    def reissue_command(self, *, command_id: str, actor_role: str, reason: str) -> SubmissionResult:
+        allowed_roles = {"org_admin", "site_admin", "operations_override"}
+        if actor_role not in allowed_roles:
+            raise OverrideNotAllowedError("reissue role required")
+        if not reason.strip():
+            raise ValidationError("reissue reason is required")
+
+        current = self.get_command(command_id)
+        if current.status not in {CommandStatus.failed, CommandStatus.canceled}:
+            raise ValidationError("reissue allowed only for failed or canceled commands")
+
+        payload = {**current.payload, "reissue_reason": reason}
+        return self.submit_command(
+            organization_id=current.organization_id,
+            site_id=current.site_id,
+            point_id=current.point_id,
+            command_class=current.command_class,
+            payload=payload,
+            idempotency_key=None,
+            correlation_id=None,
+            parent_command_id=current.command_id,
+        )
 
     def override_channel(
         self,

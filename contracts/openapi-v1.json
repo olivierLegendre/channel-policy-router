@@ -299,6 +299,34 @@
         "title": "DispatchRequest",
         "type": "object"
       },
+      "GovernanceSnapshotResponse": {
+        "properties": {
+          "queueDepth": {
+            "title": "Queuedepth",
+            "type": "integer"
+          },
+          "rejected50324h": {
+            "title": "Rejected50324H",
+            "type": "integer"
+          },
+          "site_id": {
+            "title": "Site Id",
+            "type": "string"
+          },
+          "slaBreaches24h": {
+            "title": "Slabreaches24H",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "site_id",
+          "queueDepth",
+          "slaBreaches24h",
+          "rejected50324h"
+        ],
+        "title": "GovernanceSnapshotResponse",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -439,6 +467,22 @@
         "title": "IncidentHookResponse",
         "type": "object"
       },
+      "ListCommandsResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CommandResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ListCommandsResponse",
+        "type": "object"
+      },
       "OverrideRequest": {
         "properties": {
           "actor_role": {
@@ -538,6 +582,26 @@
           "observed_match"
         ],
         "title": "ReconcileRequest",
+        "type": "object"
+      },
+      "ReissueRequest": {
+        "properties": {
+          "actor_role": {
+            "minLength": 1,
+            "title": "Actor Role",
+            "type": "string"
+          },
+          "reason": {
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "actor_role",
+          "reason"
+        ],
+        "title": "ReissueRequest",
         "type": "object"
       },
       "SlaBatchEvaluateRequest": {
@@ -656,6 +720,72 @@
   "openapi": "3.1.0",
   "paths": {
     "/api/v1/commands": {
+      "get": {
+        "operationId": "list_commands_api_v1_commands_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "site_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "title": "Site Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListCommandsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Commands"
+      },
       "post": {
         "operationId": "submit_command_api_v1_commands_post",
         "requestBody": {
@@ -908,6 +1038,71 @@
         "summary": "Reconcile Command"
       }
     },
+    "/api/v1/commands/{command_id}/reissue": {
+      "post": {
+        "operationId": "reissue_command_api_v1_commands__command_id__reissue_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "command_id",
+            "required": true,
+            "schema": {
+              "title": "Command Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReissueRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandSubmitResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reissue Command"
+      }
+    },
     "/api/v1/dispatch-next": {
       "post": {
         "operationId": "dispatch_next_api_v1_dispatch_next_post",
@@ -944,6 +1139,46 @@
           }
         },
         "summary": "Dispatch Next"
+      }
+    },
+    "/api/v1/governance/snapshot": {
+      "get": {
+        "operationId": "governance_snapshot_api_v1_governance_snapshot_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "site_id",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "title": "Site Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GovernanceSnapshotResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Snapshot"
       }
     },
     "/api/v1/incidents/hooks": {

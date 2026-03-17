@@ -105,3 +105,11 @@ class IncidentDeliveryBatchResult:
     lock_acquired: bool
     delivered_count: int
     failed_count: int
+
+
+@dataclass(frozen=True)
+class GovernanceSnapshot:
+    site_id: str
+    queue_depth: int
+    sla_breaches_24h: int
+    rejected_503_24h: int

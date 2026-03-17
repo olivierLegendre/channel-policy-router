@@ -167,6 +167,61 @@ class PostgresCommandRepository:
             row = cur.fetchone()
         return _to_command(row) if row else None
 
+    def list_recent(self, *, site_id: str, status: str | None, limit: int) -> Sequence[Command]:
+        with self._conn.cursor(row_factory=dict_row) as cur:
+            if status is None:
+                cur.execute(
+                    """
+                    SELECT * FROM commands
+                    WHERE site_id = %s
+                    ORDER BY created_at DESC
+                    LIMIT %s
+                    """,
+                    (site_id, limit),
+                )
+            else:
+                cur.execute(
+                    """
+                    SELECT * FROM commands
+                    WHERE site_id = %s
+                      AND status = %s
+                    ORDER BY created_at DESC
+                    LIMIT %s
+                    """,
+                    (site_id, status, limit),
+                )
+            rows = cur.fetchall()
+        return [_to_command(row) for row in rows]
+
+    def count_recent_by_status(self, *, site_id: str, status: str, since: datetime) -> int:
+        with self._conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(
+                """
+                SELECT count(*) AS c
+                FROM commands
+                WHERE site_id = %s
+                  AND status = %s
+                  AND created_at >= %s
+                """,
+                (site_id, status, since),
+            )
+            row = cur.fetchone()
+        return int(row["c"]) if row else 0
+
+    def count_queued(self, *, site_id: str) -> int:
+        with self._conn.cursor(row_factory=dict_row) as cur:
+            cur.execute(
+                """
+                SELECT count(*) AS c
+                FROM commands
+                WHERE site_id = %s
+                  AND status = queued
+                """,
+                (site_id,),
+            )
+            row = cur.fetchone()
+        return int(row["c"]) if row else 0
+
     def find_recent_by_idempotency(
         self,
         *,

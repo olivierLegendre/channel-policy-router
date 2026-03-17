@@ -1,3 +1,5 @@
+import base64
+import json
 from datetime import UTC, datetime, timedelta
 
 from fastapi.testclient import TestClient
@@ -293,3 +295,88 @@ def test_incident_delivery_retry_and_backoff(monkeypatch) -> None:
         assert hooks.status_code == 200
         rows = hooks.json()
         assert rows[0]["attempt_count"] >= 0
+
+
+def _jwt_for_roles(*roles: str) -> str:
+    header = (
+        base64.urlsafe_b64encode(json.dumps({"alg": "none", "typ": "JWT"}).encode())
+        .decode()
+        .rstrip("=")
+    )
+    payload = base64.urlsafe_b64encode(
+        json.dumps({"realm_access": {"roles": list(roles)}}).encode()
+    ).decode().rstrip("=")
+    return f"{header}.{payload}.sig"
+
+
+def test_list_commands_and_governance_snapshot(in_memory_client: TestClient) -> None:
+    in_memory_client.post(
+        "/api/v1/commands",
+        json={
+            "organization_id": "org-1",
+            "site_id": "site-gov",
+            "point_id": "p-1",
+            "command_class": "interactive_control",
+            "payload": {"target": 20},
+            "idempotency_key": "idem-gov-1",
+            "correlation_id": "corr-gov-1",
+        },
+    )
+
+    listed = in_memory_client.get("/api/v1/commands", params={"site_id": "site-gov", "limit": 20})
+    assert listed.status_code == 200
+    assert len(listed.json()["items"]) >= 1
+
+    gov = in_memory_client.get("/api/v1/governance/snapshot", params={"site_id": "site-gov"})
+    assert gov.status_code == 200
+    body = gov.json()
+    assert body["site_id"] == "site-gov"
+    assert body["queueDepth"] >= 0
+
+
+def test_reissue_requires_token_and_role(in_memory_client: TestClient) -> None:
+    submitted = in_memory_client.post(
+        "/api/v1/commands",
+        json={
+            "organization_id": "org-1",
+            "site_id": "site-r",
+            "point_id": "p-r",
+            "command_class": "interactive_control",
+            "payload": {"target": 22},
+            "idempotency_key": "idem-r",
+            "correlation_id": "corr-r",
+        },
+    )
+    command_id = submitted.json()["command"]["command_id"]
+
+    in_memory_client.post(
+        "/api/v1/dispatch-next",
+        json={"site_id": "site-r", "point_id": "p-r"},
+    )
+    in_memory_client.post(
+        f"/api/v1/commands/{command_id}/reconcile",
+        json={"observed_match": False},
+    )
+
+    missing_auth = in_memory_client.post(
+        f"/api/v1/commands/{command_id}/reissue",
+        json={"actor_role": "org_admin", "reason": "retry"},
+    )
+    assert missing_auth.status_code == 401
+
+    weak = _jwt_for_roles("viewer")
+    forbidden = in_memory_client.post(
+        f"/api/v1/commands/{command_id}/reissue",
+        json={"actor_role": "viewer", "reason": "retry"},
+        headers={"Authorization": f"Bearer {weak}"},
+    )
+    assert forbidden.status_code == 403
+
+    admin = _jwt_for_roles("org_admin")
+    reissued = in_memory_client.post(
+        f"/api/v1/commands/{command_id}/reissue",
+        json={"actor_role": "org_admin", "reason": "retry"},
+        headers={"Authorization": f"Bearer {admin}"},
+    )
+    assert reissued.status_code == 202
+    assert reissued.json()["command"]["parent_command_id"] == command_id

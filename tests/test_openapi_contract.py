@@ -8,6 +8,7 @@ from channel_policy_router.main import create_app
 EXPECTED_PATHS = {
     "/healthz",
     "/api/v1/commands",
+    "/api/v1/commands/{command_id}/reissue",
     "/api/v1/commands/{command_id}",
     "/api/v1/commands/{command_id}/cancel",
     "/api/v1/commands/{command_id}/override-channel",
@@ -18,6 +19,7 @@ EXPECTED_PATHS = {
     "/api/v1/dispatch-next",
     "/api/v1/sla/evaluate",
     "/api/v1/incidents/hooks",
+    "/api/v1/governance/snapshot",
     "/api/v1/incidents/hooks/deliver",
 }
 
