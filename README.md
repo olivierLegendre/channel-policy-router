@@ -53,3 +53,22 @@ PostgreSQL integration tests:
 ```bash
 ./scripts/run_postgres_integration_tests.sh
 ```
+
+## JWT verification mode (W6-06)
+
+Environment variables:
+
+- `CHANNEL_POLICY_ROUTER_AUTH_JWT_SECRET`
+- `CHANNEL_POLICY_ROUTER_AUTH_JWT_ISSUER`
+- `CHANNEL_POLICY_ROUTER_AUTH_JWT_AUDIENCE`
+- `CHANNEL_POLICY_ROUTER_APP_ENV` (default: `dev`)
+- `CHANNEL_POLICY_ROUTER_AUTH_JWT_REQUIRE_ISSUER_AUDIENCE` (optional override)
+
+Behavior:
+
+- In `dev`, issuer/audience are optional unless explicitly required.
+- In non-dev (`APP_ENV != dev`), strict mode is enabled by default and both issuer + audience are required.
+
+## Operations Runbook
+
+- `docs/runbooks/incident-rollback-recovery.md`

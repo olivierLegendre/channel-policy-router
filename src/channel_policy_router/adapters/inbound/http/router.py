@@ -16,7 +16,7 @@ from channel_policy_router.domain.errors import (
     ReconciliationNotAllowedError,
     ValidationError,
 )
-from channel_policy_router.security.auth import JwtVerifierConfig, require_any_role
+from channel_policy_router.security.auth import build_jwt_verifier_config, require_any_role
 from channel_policy_router.settings import Settings
 
 from .schemas import (
@@ -66,10 +66,14 @@ def _to_command_response(item: Any) -> CommandResponse:
     )
 
 
-JWT_CONFIG = JwtVerifierConfig(
-    secret=Settings().auth_jwt_secret,
-    issuer=Settings().auth_jwt_issuer,
-    audience=Settings().auth_jwt_audience,
+settings = Settings()
+
+JWT_CONFIG = build_jwt_verifier_config(
+    secret=settings.auth_jwt_secret,
+    issuer=settings.auth_jwt_issuer,
+    audience=settings.auth_jwt_audience,
+    require_issuer_audience=settings.jwt_strict_mode,
+    forbid_default_secret=settings.jwt_strict_mode,
 )
 
 

@@ -7,12 +7,35 @@ import jwt
 from fastapi import HTTPException
 from jwt import InvalidTokenError
 
+DEFAULT_DEV_JWT_SECRET = "dev-wave6-change-me-32-byte-minimum-key"
+
 
 @dataclass(frozen=True)
 class JwtVerifierConfig:
     secret: str
     issuer: str | None
     audience: str | None
+    require_issuer_audience: bool
+
+
+def build_jwt_verifier_config(
+    *,
+    secret: str,
+    issuer: str | None,
+    audience: str | None,
+    require_issuer_audience: bool,
+    forbid_default_secret: bool,
+) -> JwtVerifierConfig:
+    if require_issuer_audience and (not issuer or not audience):
+        raise ValueError("strict JWT mode requires both issuer and audience")
+    if forbid_default_secret and secret == DEFAULT_DEV_JWT_SECRET:
+        raise ValueError("non-dev mode requires non-default JWT secret from secret manager")
+    return JwtVerifierConfig(
+        secret=secret,
+        issuer=issuer,
+        audience=audience,
+        require_issuer_audience=require_issuer_audience,
+    )
 
 
 def decode_bearer_token(authorization: str | None, config: JwtVerifierConfig) -> dict[str, Any]:

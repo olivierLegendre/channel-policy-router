@@ -24,6 +24,13 @@ class Settings(BaseSettings):
     auth_jwt_secret: str = "dev-wave6-change-me-32-byte-minimum-key"
     auth_jwt_issuer: str | None = None
     auth_jwt_audience: str | None = None
+    auth_jwt_require_issuer_audience: bool | None = None
+
+    @property
+    def jwt_strict_mode(self) -> bool:
+        if self.auth_jwt_require_issuer_audience is not None:
+            return self.auth_jwt_require_issuer_audience
+        return self.app_env.lower() != "dev"
 
     model_config = SettingsConfigDict(
         env_prefix="CHANNEL_POLICY_ROUTER_",

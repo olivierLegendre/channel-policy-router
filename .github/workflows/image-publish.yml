@@ -1,0 +1,75 @@
+name: Image Publish
+
+# Baseline pipeline for Wave 6 closure: publish pullable service images to GHCR.
+# TODO(w6-hardening): Add build/test attestations and provenance (SLSA, SBOM signing).
+# TODO(w6-hardening): Add vulnerability scanning gate (fail on agreed severity threshold).
+# TODO(w6-hardening): Add OIDC-based least-privilege publish token strategy and org migration to ghcr.io/ramery.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Optional explicit image tag (example: v0.1.0 or rc-1)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute image tags
+        id: vars
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="ghcr.io/olivierlegendre/channel-policy-router"
+          SHA_TAG="sha-${GITHUB_SHA::12}"
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.image_tag }}" ]]; then
+            PRIMARY_TAG="${{ inputs.image_tag }}"
+          elif [[ "${{ github.ref_type }}" == "tag" ]]; then
+            PRIMARY_TAG="${{ github.ref_name }}"
+          else
+            PRIMARY_TAG="$SHA_TAG"
+          fi
+
+          TAGS="$IMAGE:$PRIMARY_TAG"
+          if [[ "$PRIMARY_TAG" != "$SHA_TAG" ]]; then
+            TAGS="$TAGS\n$IMAGE:$SHA_TAG"
+          fi
+
+          {
+            echo "image=$IMAGE"
+            echo "tags<<EOF"
+            echo -e "$TAGS"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.vars.outputs.tags }}
+          provenance: false
