@@ -6,24 +6,25 @@ cd "$REPO_DIR"
 
 source .venv/bin/activate
 
-cleanup() {
-  docker compose -f docker-compose.postgres.yml down -v >/dev/null 2>&1 || true
-}
-trap cleanup EXIT
+IOT_SERVICES_ROOT="${IOT_SERVICES_ROOT:-$(cd "${REPO_DIR}/.." && pwd)}"
+FOUNDATION_DIR="${FOUNDATION_DIR:-${IOT_SERVICES_ROOT}/platform-foundation}"
+FOUNDATION_SCRIPTS_DIR="${FOUNDATION_DIR}/deploy/production/scripts"
+POSTGRES_SHARED_ENV_FILE="${POSTGRES_SHARED_ENV_FILE:-${FOUNDATION_SCRIPTS_DIR}/postgres-shared.env}"
+export POSTGRES_SHARED_ENV_FILE
 
-docker compose -f docker-compose.postgres.yml up -d
+"${FOUNDATION_SCRIPTS_DIR}/run_shared_postgres_cluster.sh" up
+"${FOUNDATION_SCRIPTS_DIR}/provision_shared_postgres.sh" --service channel-policy-router --reset-db
 
-for _ in {1..40}; do
-  if docker exec channel-policy-router-postgres pg_isready -U postgres -d channel_policy_router >/dev/null 2>&1; then
-    break
-  fi
-  sleep 1
-done
-
-if ! docker exec channel-policy-router-postgres pg_isready -U postgres -d channel_policy_router >/dev/null 2>&1; then
-  echo "PostgreSQL did not become ready in time." >&2
-  exit 1
+if [[ -f "${POSTGRES_SHARED_ENV_FILE}" ]]; then
+  # shellcheck disable=SC1090
+  source "${POSTGRES_SHARED_ENV_FILE}"
 fi
 
-export CHANNEL_POLICY_ROUTER_TEST_POSTGRES_DSN="postgresql://postgres:postgres@localhost:55434/channel_policy_router"
+DB_HOST="${POSTGRES_CLUSTER_HOST:-localhost}"
+DB_PORT="${POSTGRES_CLUSTER_PORT:-55440}"
+DB_NAME="${CHANNEL_POLICY_ROUTER_DB_NAME:-channel_policy_router}"
+DB_USER="${CHANNEL_POLICY_ROUTER_MIGRATOR_ROLE:-svc_channel_policy_router_migrator}"
+DB_PASSWORD="${CHANNEL_POLICY_ROUTER_MIGRATOR_PASSWORD:-dev_channel_policy_router_migrator}"
+
+export CHANNEL_POLICY_ROUTER_TEST_POSTGRES_DSN="postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
 pytest -m postgres_integration -q

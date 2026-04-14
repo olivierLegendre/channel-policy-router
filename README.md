@@ -21,6 +21,8 @@ source .venv/bin/activate
 ## Run
 
 ```bash
+export CHANNEL_POLICY_ROUTER_PERSISTENCE_BACKEND=postgres
+export CHANNEL_POLICY_ROUTER_POSTGRES_DSN='postgresql://svc_channel_policy_router_app:dev_channel_policy_router_app@localhost:55440/channel_policy_router'
 uvicorn channel_policy_router.main:app --reload
 ```
 
@@ -53,6 +55,11 @@ PostgreSQL integration tests:
 ```bash
 ./scripts/run_postgres_integration_tests.sh
 ```
+
+Shared Postgres dependency:
+
+- The integration script uses `platform-foundation` shared cluster provisioning (no local per-service Postgres container).
+- Optional env override: `POSTGRES_SHARED_ENV_FILE=/path/to/postgres-shared.env`.
 
 ## JWT verification mode (W6-06)
 
