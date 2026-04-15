@@ -14,7 +14,7 @@ def test_postgres_submit_dispatch_reconcile(monkeypatch: pytest.MonkeyPatch) -> 
 
     monkeypatch.setenv("CHANNEL_POLICY_ROUTER_PERSISTENCE_BACKEND", "postgres")
     monkeypatch.setenv("CHANNEL_POLICY_ROUTER_POSTGRES_DSN", dsn)
-    monkeypatch.setenv("CHANNEL_POLICY_ROUTER_POSTGRES_AUTO_INIT", "true")
+    monkeypatch.setenv("CHANNEL_POLICY_ROUTER_POSTGRES_AUTO_INIT", "false")
 
     client = TestClient(create_app())
     created = client.post(
@@ -54,7 +54,7 @@ def test_postgres_site_scope_isolation_for_listing(monkeypatch: pytest.MonkeyPat
 
     monkeypatch.setenv("CHANNEL_POLICY_ROUTER_PERSISTENCE_BACKEND", "postgres")
     monkeypatch.setenv("CHANNEL_POLICY_ROUTER_POSTGRES_DSN", dsn)
-    monkeypatch.setenv("CHANNEL_POLICY_ROUTER_POSTGRES_AUTO_INIT", "true")
+    monkeypatch.setenv("CHANNEL_POLICY_ROUTER_POSTGRES_AUTO_INIT", "false")
 
     client = TestClient(create_app())
 

@@ -23,8 +23,13 @@ fi
 DB_HOST="${POSTGRES_CLUSTER_HOST:-localhost}"
 DB_PORT="${POSTGRES_CLUSTER_PORT:-55440}"
 DB_NAME="${CHANNEL_POLICY_ROUTER_DB_NAME:-channel_policy_router}"
-DB_USER="${CHANNEL_POLICY_ROUTER_MIGRATOR_ROLE:-svc_channel_policy_router_migrator}"
-DB_PASSWORD="${CHANNEL_POLICY_ROUTER_MIGRATOR_PASSWORD:-dev_channel_policy_router_migrator}"
+APP_USER="${CHANNEL_POLICY_ROUTER_APP_ROLE:-svc_channel_policy_router_app}"
+APP_PASSWORD="${CHANNEL_POLICY_ROUTER_APP_PASSWORD:-dev_channel_policy_router_app}"
+MIGRATOR_USER="${CHANNEL_POLICY_ROUTER_MIGRATOR_ROLE:-svc_channel_policy_router_migrator}"
+MIGRATOR_PASSWORD="${CHANNEL_POLICY_ROUTER_MIGRATOR_PASSWORD:-dev_channel_policy_router_migrator}"
 
-export CHANNEL_POLICY_ROUTER_TEST_POSTGRES_DSN="postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+export CHANNEL_POLICY_ROUTER_MIGRATOR_DSN="postgresql://${MIGRATOR_USER}:${MIGRATOR_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+./scripts/migrate_postgres.sh upgrade head
+
+export CHANNEL_POLICY_ROUTER_TEST_POSTGRES_DSN="postgresql://${APP_USER}:${APP_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
 pytest -m postgres_integration -q

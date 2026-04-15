@@ -14,8 +14,15 @@ Critical path: command admission, queueing, dispatch, reconciliation, incident h
 ## Rollback
 
 1. Re-deploy last known good release artifact for `channel-policy-router`.
-2. Restart SLA evaluator and incident-delivery workers.
-3. Resume command intake only after queue policy checks pass.
+2. If incident root cause includes schema drift, rollback one migration step with migrator role:
+
+```bash
+export CHANNEL_POLICY_ROUTER_MIGRATOR_DSN='postgresql://svc_channel_policy_router_migrator:***@<host>:<port>/channel_policy_router'
+./scripts/migrate_postgres.sh downgrade -1
+```
+
+3. Restart SLA evaluator and incident-delivery workers.
+4. Resume command intake only after queue policy checks pass.
 
 ## Recovery Validation
 
@@ -26,6 +33,7 @@ ruff check .
 mypy src
 pytest -m "not postgres_integration"
 ./scripts/run_postgres_integration_tests.sh
+./scripts/migrate_postgres.sh current
 python scripts/run_sla_evaluator.py
 python scripts/run_incident_delivery_worker.py
 ```

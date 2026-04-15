@@ -26,6 +26,16 @@ export CHANNEL_POLICY_ROUTER_POSTGRES_DSN='postgresql://svc_channel_policy_route
 uvicorn channel_policy_router.main:app --reload
 ```
 
+Schema migration is handled with Alembic (`alembic/` + `scripts/migrate_postgres.sh`).
+`scripts/init_postgres.sql` remains as a bootstrap fallback, but production path should use Alembic upgrades.
+
+Apply migrations (migrator role):
+
+```bash
+export CHANNEL_POLICY_ROUTER_MIGRATOR_DSN='postgresql://svc_channel_policy_router_migrator:dev_channel_policy_router_migrator@localhost:55440/channel_policy_router'
+./scripts/migrate_postgres.sh upgrade head
+```
+
 ## Endpoints
 
 - `POST /api/v1/commands`
@@ -60,6 +70,7 @@ Shared Postgres dependency:
 
 - The integration script uses `platform-foundation` shared cluster provisioning (no local per-service Postgres container).
 - Optional env override: `POSTGRES_SHARED_ENV_FILE=/path/to/postgres-shared.env`.
+- Integration flow now applies Alembic migrations with the migrator role, then runs tests with the app role DSN.
 
 ## JWT verification mode (W6-06)
 
